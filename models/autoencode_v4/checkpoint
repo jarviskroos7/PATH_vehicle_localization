@@ -1,0 +1,2 @@
+model_checkpoint_path: "autoencode_v4"
+all_model_checkpoint_paths: "autoencode_v4"
