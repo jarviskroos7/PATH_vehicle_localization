@@ -5,9 +5,44 @@ import numpy as np
 import sys
 from ekf_6states import *
 from util import *
+import logging
 
 from sklearn.preprocessing import normalize
 from sklearn.metrics import mean_squared_error
+
+# ========================
+# custom search spaces
+
+space_v1 = {
+        'p_diag': hp.uniform('p_diag', 0, 10),
+        'q11': hp.uniform('q11', 0, 0.005),
+        'q33': hp.uniform('q33', 0, 0.2),
+        'q44': hp.uniform('q44', 0, 0.3),
+        'q55': hp.uniform('q55', 0, 0.1),
+        'q66': hp.uniform('q66', 0, 0.2)
+    }
+
+space_v2 = {
+    'p_diag': hp.uniform('p_diag', 0, 10),
+    'q11': hp.uniform('q11', 0, 0.005),
+    'q33': hp.uniform('q33', 0, 0.2),
+    'q44': hp.uniform('q44', 0, 0.3),
+    'q55': hp.uniform('q55', 0, 0.1),
+    'q66': hp.uniform('q66', 0, 0.2),
+    'r44': hp.uniform('r44', 0, 1),
+    'r55': hp.uniform('r55', 0, 1),
+}
+
+space_v3 = {
+    'p_diag': hp.choice('p_diag', np.linspace(0, 10, 20)),
+    'q11': hp.loguniform('q11', 0, 0.005),
+    'q33': hp.loguniform('q33', 0, 0.1),
+    'q44': hp.loguniform('q44', 0, 0.3),
+    'q55': hp.loguniform('q55', 0, 0.2),
+    'q66': hp.loguniform('q66', 0, 0.1),
+    'r44': hp.uniform('r44', 0, 2),
+    'r55': hp.uniform('r55', 0, 2),
+}
 
 
 # ========================
@@ -174,42 +209,10 @@ def hypeopt_tune(space, err_func, iterations):
     return trials, best
 
 
-
-
-
-
 def main(mode):
 
-    space = {
-        'p_diag': hp.uniform('p_diag', 0, 10),
-        'q11': hp.uniform('q11', 0, 0.005),
-        'q33': hp.uniform('q33', 0, 0.2),
-        'q44': hp.uniform('q44', 0, 0.3),
-        'q55': hp.uniform('q55', 0, 0.1),
-        'q66': hp.uniform('q66', 0, 0.2)
-    }
+    
 
-    space_v2 = {
-        'p_diag': hp.uniform('p_diag', 0, 10),
-        'q11': hp.uniform('q11', 0, 0.005),
-        'q33': hp.uniform('q33', 0, 0.2),
-        'q44': hp.uniform('q44', 0, 0.3),
-        'q55': hp.uniform('q55', 0, 0.1),
-        'q66': hp.uniform('q66', 0, 0.2),
-        'r44': hp.uniform('r44', 0, 1),
-        'r55': hp.uniform('r55', 0, 1),
-    }
-
-    space_v3 = {
-        'p_diag': hp.choice('p_diag', np.linspace(0, 10, 20)),
-        'q11': hp.loguniform('q11', 0, 0.005),
-        'q33': hp.loguniform('q33', 0, 0.2),
-        'q44': hp.loguniform('q44', 0, 0.3),
-        'q55': hp.loguniform('q55', 0, 0.1),
-        'q66': hp.loguniform('q66', 0, 0.2),
-        'r44': hp.loguniform('r44', 0, 1),
-        'r55': hp.loguniform('r55', 0, 1),
-    }
 
     return None
 
