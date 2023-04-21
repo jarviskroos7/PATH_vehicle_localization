@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import seaborn as sns
+import pandas as pd
 plt.rcParams["figure.dpi"] = 100
 
 
@@ -64,26 +65,36 @@ def plot_traj_comp_idx(ekf_results, sample_idx, exp_name=''):
     plt.legend(loc='best')
     plt.show()
 
-def plot_tot_traj_dist_err(traj_seg_pred, exp_name):
+def plot_tot_traj_dist_err(traj_seg_pred, exp_name, ylim=20, binwidth=0.25):
 
     length_m_lst = []
     length_m_pred_lst = []
     length_m_noise_lst = []
 
     for idx, df in enumerate(traj_seg_pred):
-        length_m, length_m_pred, length_m_noise = traj_distances_proj(df)
+        length_m, length_m_pred, length_m_noise = traj_distances_proj_vectorized(df)
         length_m_lst.append(length_m)
         length_m_pred_lst.append(length_m_pred)
         length_m_noise_lst.append(length_m_noise)
     
+    delta_pred = np.array(length_m_lst) - np.array(length_m_pred_lst)
+    delta_noise = np.array(length_m_lst) - np.array(length_m_noise_lst)
+
+    print('delta_pred stats:')
+    print(pd.Series(delta_pred).describe())
+    print()
+    print('delta_noise stats:')
+    print(pd.Series(delta_noise).describe())
+
     plt.figure(figsize=((7, 4)), dpi=100)
-    sns.histplot(np.array(length_m_lst) - np.array(length_m_pred_lst), binwidth=0.25, label='truth - pred')
-    sns.histplot(np.array(length_m_lst) - np.array(length_m_noise_lst), binwidth=0.25, label='truth - noise', color='red')
+    sns.histplot(delta_pred, binwidth=binwidth, label='truth - pred')
+    sns.histplot(delta_noise, binwidth=binwidth, label='truth - noise', color='red')
     plt.title(f'ekf_6state: {exp_name}')
     plt.xlabel('total trajectory length error [m]')
     # plt.xlim(-15, 1)
-    plt.ylim(0, 20)
+    plt.ylim(0, ylim)
     plt.legend()
+    plt.show()
 
 def plot_proj_dist_err(pred_err, noise_err, exp_name):
 
@@ -111,43 +122,53 @@ def boxplot_proj_dist_err(pred_err, noise_err, exp_name):
     ax = sns.boxplot(data=[
         pred_err, noise_err
     ], orient='h')
-    ax.set_xlim(0, 7)
+    # ax.set_xlim(0, 7)
     ax.set_yticks([0, 1], ['prediction error', 'noise error'])
     plt.title(f'ekf_6states boxplot: {exp_name}')
     plt.xlabel('coord euclidean error [m]')
+    plt.show()
 
 # ========================
 # error metrics
 
-def traj_distances_proj(df):
+def traj_distances_proj_vectorized(df):
 
-    # trajectory distance after projection
+    """
+    vectorization applied
+    trajectory distance after projection
+    """
 
-    length_m = 0
-    length_m_pred = 0
-    length_m_noise = 0
+    x = df['x'].values
+    y = df['y'].values
+    x_noise = df['x_noise'].values
+    y_noise = df['y_noise'].values
+    x_est = df['x_est'].values
+    y_est = df['y_est'].values
 
-    for index, row in df.iterrows():
-        try:
-            # actual
-            start = (row['y'], row['x'])
-            end = (df.iloc[index+1]['y'], df.iloc[index+1]['x'])
-            length_m += math.dist(start, end)
-
-            # predicted
-            start = (row['y_est'], row['x_est'])
-            end = (df.iloc[index+1]['y_est'], df.iloc[index+1]['x_est'])
-            length_m_pred += math.dist(start, end)
-
-            # noise
-            start = (row['y_noise'], row['x_noise'])
-            end = (df.iloc[index+1]['y_noise'], df.iloc[index+1]['x_noise'])
-            length_m_noise += math.dist(start, end)
-
-        except: # end of trajectory
-            pass
+    def distance(x_start, y_start, x_end, y_end):
+        start = (x_start, y_start)
+        end = (x_end, y_end)
+        return math.dist(start, end)
     
-    return length_m, length_m_pred, length_m_noise
+    length_gt = np.sum(
+        np.vectorize(distance)(
+            x[:-1], y[:-1], x[1:], y[1:]
+        )
+    )
+
+    length_pred = np.sum(
+        np.vectorize(distance)(
+            x_est[:-1], y_est[:-1], x_est[1:], y_est[1:]
+        )
+    )
+
+    length_noise = np.sum(
+        np.vectorize(distance)(
+            x_noise[:-1], y_noise[:-1], x_noise[1:], y_noise[1:]
+        )
+    )
+
+    return length_gt, length_pred, length_noise
 
 def proj_dist_err(ekf_results):
 
