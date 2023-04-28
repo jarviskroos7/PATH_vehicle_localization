@@ -117,7 +117,11 @@ def batch_tot_dist_post(ekf_results):
 def batch_rmse(space):
     
     # ekf_results = ekf_batch_eval(batch_df=sample_trajs, param=space) # subsample
-    ekf_results = ekf_batch_eval(batch_df=rl_seg_noise, param=space) # full sample
+    # ekf_results = ekf_batch_eval(batch_df=rl_seg_noise, param=space) # full sample
+    
+    # full sample
+    ll_seg_noise, rl_seg_noise = load_data(data_ver='5')
+    ekf_results = ekf_batch_eval(batch_df=rl_seg_noise, param=space)
     rmse_lst = []
 
     for seg_df in ekf_results:
@@ -165,7 +169,7 @@ def batch_tot_dist_and_rmse(space):
     # normalize both error metrics
     rmse_lst = normalize(np.array([rmse_lst]))[0]
     total_traj_err_lst = normalize(np.array([total_traj_err_lst]))[0]
-    comb_err_lst = rmse_lst + total_traj_err_lst
+    comb_err_lst = rmse_lst + total_traj_err_lst # type: ignore
 
     return np.average(np.array(comb_err_lst))
 
@@ -187,7 +191,7 @@ def batch_tot_dist_and_rmse_post(ekf_results):
     # normalize both error metrics
     rmse_lst = normalize(np.array([rmse_lst]))[0]
     total_traj_err_lst = normalize(np.array([total_traj_err_lst]))[0]
-    comb_err_lst = rmse_lst + total_traj_err_lst
+    comb_err_lst = rmse_lst + total_traj_err_lst # type: ignore
 
     return np.average(np.array(comb_err_lst))
 
@@ -221,11 +225,14 @@ def hypeopt_tune(space, err_func, iterations):
 def main(mode, experiment, space, error_metric=None):
 
     if mode == 'train':
+
+        logger.info(f'=== training: {experiment} ===')
         exp_trial, exp_best = hypeopt_tune(space, error_metric, iterations=50)
         
+        # print param incase of saving failure
         for param in exp_best.keys():
             print(exp_best[param])
-
+        
         pickle.dump(exp_trial, open(f"../models/hyperopt_trials/{experiment}.pkl", "wb"))
     
     else:
@@ -256,7 +263,7 @@ if __name__ == "__main__":
     ll_seg_noise, rl_seg_noise = load_data(data_version)
     error_metric = [
         None, batch_gc_dist, batch_tot_dist, batch_rmse, batch_tot_dist_and_rmse
-        ][error_metric-1]
+        ][error_metric]
 
     if mode == "predict":
         exp_trial = load_exp_param(experiment)

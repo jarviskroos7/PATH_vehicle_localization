@@ -9,7 +9,7 @@ from util import *
 sample_freq = 25 # 10hz
 dt = 0.01 * sample_freq
 
-v, theta, omega, dts, x, y, lat, lon, alpha = symbols('v theta \omega T x y lat lon alpha')
+v, theta, omega, dts, x, y, lat, lon, alpha = symbols('v theta \omega T x y lat lon alpha') # type: ignore
 
 # transition matrix
 A = Matrix([[x + (1 / omega**2) * ((v*omega + alpha * omega * dts) * sin(theta + omega * dts) + alpha * cos(theta + omega * dts) - v * omega * sin(theta) - alpha * cos(theta))],    
@@ -132,20 +132,12 @@ def ekf_6_states(segment_df, param, filter_flag):
         Q = np.diag([
             param['q11'], param['q33'], param['q44'], param['q55'], param['q66']
         ])
-        
-
-    """ Q = np.diag([
-        s_gps**2, s_gps**2, 0.0002, s_vel**2, 0.0002, s_accel**2
-    ]) """
-
-    """ Q = np.array([
-        [s_gps**2, 0, 0.0001, 0.0001, 0.0001, 0.0001],
-        [0, s_gps**2, 0.0001, 0.0001, 0.0001, 0.0001],
-        [0, 0, s_yaw**2, 0.0001, 0.0001, 0.0001],
-        [0, 0, 0.0001, 0.0001, s_vel**2, 0.0001],
-        [0, 0, 0.0001, 0.0001, s_omega**2, 0],
-        [0, 0, 0.0001, 0.0001, 0, s_accel**2],
-    ]) """
+        R = np.diag(
+            [sig_gps**2, sig_gps**2, sig_vel**2, sig_omega**2, sig_accel**2]
+        )
+    
+    Q = np.absolute(Q)
+    R = np.absolute(R)
 
     I = np.eye(len(state))
 
