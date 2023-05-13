@@ -136,8 +136,8 @@ def ekf_6_states(segment_df, param, filter_flag):
             [sig_gps**2, sig_gps**2, sig_vel**2, sig_omega**2, sig_accel**2]
         )
     
-    Q = np.absolute(Q)
-    R = np.absolute(R)
+    # Q = np.abs(Q)
+    # R = np.abs(R)
 
     I = np.eye(len(state))
 

@@ -40,8 +40,10 @@ space_v3 = {
     'q11': hp.normal('q11', s_gps**2, 0.001),
     'q22': hp.normal('q22', s_gps**2, 0.001),
     'q33': hp.normal('q33', s_yaw**2, 2.5e-8),
-    'q44': hp.normal('q44', s_vel**2, 0.1),
-    'q55': hp.normal('q55', s_omega**2, 0.005),
+    'q44': hp.normal('q44', s_vel**2, 0.09),
+    'q55': hp.normal('q55', s_omega**2, 0.004),
+    # 'q44': hp.normal('q44', s_vel**2, 0.1),
+    # 'q55': hp.normal('q55', s_omega**2, 0.005),
     'q66': hp.normal('q66', s_accel**2, 0.02),
     }
 
@@ -53,7 +55,10 @@ space_v3 = {
 def batch_gc_dist(space):
 
     # ekf_results = ekf_batch_eval(batch_df=sample_trajs, param=space) # subsample
-    ekf_results = ekf_batch_eval(batch_df=rl_seg_noise, param=space) # full sample
+    # ekf_results = ekf_batch_eval(batch_df=rl_seg_noise, param=space) # full sample
+
+    ll_seg_noise, rl_seg_noise = load_data(data_ver='5')
+    ekf_results = ekf_batch_eval(batch_df=rl_seg_noise, param=space)
     gc_err_lst = []
 
     for seg_df in ekf_results:
@@ -236,6 +241,7 @@ def main(mode, experiment, space, error_metric=None):
         pickle.dump(exp_trial, open(f"../models/hyperopt_trials/{experiment}.pkl", "wb"))
     
     else:
+        logger.info(f'=== prediction: {experiment} ===')
         exp_best = load_exp_param(experiment)
     
     logger.info('===== batch estimation... =====')
