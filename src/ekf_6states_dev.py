@@ -6,40 +6,6 @@ from sympy import Symbol, symbols, Matrix, sin, cos
 from scipy.signal import savgol_filter
 from util import *
 
-sample_freq = 25 # 10hz
-dt = 0.01 * sample_freq
-
-v, theta, omega, dts, x, y, lat, lon, alpha = symbols('v theta \omega T x y lat lon alpha') # type: ignore
-
-# transition matrix
-A = Matrix([[x + (1 / omega**2) * ((v*omega + alpha * omega * dts) * sin(theta + omega * dts) + alpha * cos(theta + omega * dts) - v * omega * sin(theta) - alpha * cos(theta))],    
-             [y + (1 / omega**2) * ((-v*omega - alpha * omega * dts) * cos(theta + omega * dts) + alpha * sin(theta + omega * dts) + v * omega * cos(theta) - alpha * sin(theta))],
-             [omega + omega*dts],
-             [alpha*dts + v],
-             [omega],
-             [alpha]])
-
-# state vector         
-state = Matrix([x, y, theta, v, omega, alpha])
-
-# constants definition
-max_Vx = 6.5 # m/s
-max_alpha_Vx = 2.193 # m/s2
-max_omega_Zv = 1.56 # deg/s
-max_omega_Zv_accel = 0.5 # 1 # deg/s2
-
-s_gps = 0.5 * max_alpha_Vx * dt ** 2
-s_yaw = 0.001 * dt # max_omega_Zv * dt
-s_vel = max_alpha_Vx * dt
-s_omega = max_omega_Zv_accel * dt
-s_accel = 0.25
-
-sig_gps = 0.25
-sig_theta = 0.1
-sig_vel = 0 * dt
-sig_omega = 0.01
-sig_accel = 0
-
 def load_data(data_ver='3'):
 
     # NOISE
@@ -114,7 +80,7 @@ def ekf_6_states(segment_df, param, filter_flag):
         Q = np.diag([
             param['q11'], param['q11'], param['q33'], param['q44'], param['q55'], param['q66']
         ])
-        R = np.diag( 
+        R = np.diag(
                 [sig_gps**2, sig_gps**2, sig_vel**2, param['r44'], param['r55']]         
             )
     elif len(param) == 6:
@@ -232,7 +198,7 @@ def ekf_6_states(segment_df, param, filter_flag):
 
     return x_est, x_noise, y_noise, segment_df['x'].values, segment_df['y'].values
 
-# ========================
+# ################################
 # batch evaluation functions
 
 def ekf_batch_eval(batch_df, param, filter_flag=False):
@@ -259,7 +225,7 @@ def ekf_batch_eval(batch_df, param, filter_flag=False):
     
     return seg_pred_batch
 
-# ========================
+# ################################
 # next state evaluation functions
 
 def ekf_next_state_eval():
@@ -270,5 +236,44 @@ def main():
     return None
 
 if __name__ == "__main__":
+
+    ################ define parameters ################
+
+    sample_freq = 25 # 10hz
+    dt = 0.01 * sample_freq
+
+    v, theta, omega, dts, x, y, lat, lon, alpha = symbols('v theta \omega T x y lat lon alpha') # type: ignore
+
+    # transition matrix
+    A = Matrix([[x + (1 / omega**2) * ((v*omega + alpha * omega * dts) * sin(theta + omega * dts) + alpha * cos(theta + omega * dts) - v * omega * sin(theta) - alpha * cos(theta))],    
+                [y + (1 / omega**2) * ((-v*omega - alpha * omega * dts) * cos(theta + omega * dts) + alpha * sin(theta + omega * dts) + v * omega * cos(theta) - alpha * sin(theta))],
+                [omega + omega*dts],
+                [alpha*dts + v],
+                [omega],
+                [alpha]])
+
+    # state vector         
+    state = Matrix([x, y, theta, v, omega, alpha])
+
+    # constants definition
+    max_Vx = 6.5 # m/s
+    max_alpha_Vx = 2.193 # m/s2
+    max_omega_Zv = 1.56 # deg/s
+    max_omega_Zv_accel = 0.5 # 1 # deg/s2
+
+    s_gps = 0.5 * max_alpha_Vx * dt ** 2
+    s_yaw = 0.001 * dt # max_omega_Zv * dt
+    s_vel = max_alpha_Vx * dt
+    s_omega = max_omega_Zv_accel * dt
+    s_accel = 0.25
+
+    sig_gps = 0.25
+    sig_theta = 0.1
+    sig_vel = 0 * dt
+    sig_omega = 0.01
+    sig_accel = 0
+
+    ###################################################
+
     main()
 
