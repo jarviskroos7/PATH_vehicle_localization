@@ -114,7 +114,7 @@ def ekf_6_states(segment_df, param, filter_flag):
         Q = np.diag([
             param['q11'], param['q11'], param['q33'], param['q44'], param['q55'], param['q66']
         ])
-        R = np.diag(
+        R = np.diag( 
                 [sig_gps**2, sig_gps**2, sig_vel**2, param['r44'], param['r55']]         
             )
     elif len(param) == 6:
