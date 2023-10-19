@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import math
 import seaborn as sns
 import pandas as pd
+import pyproj
+
 plt.rcParams["figure.dpi"] = 100
 
 
@@ -191,3 +193,63 @@ def proj_dist_err(ekf_results):
             proj_dist_err_noise_lst.append(math.dist(gt_noise, gt_coord))
     
     return proj_dist_err_pred_lst, proj_dist_err_noise_lst
+
+
+def next_coord_conversion(
+        coord1, coord2, coord_prev=[0, 0]
+    ) -> list:
+
+    # normalize GPS coordinate in relation to a given coord_prev
+
+    x0 = coord_prev[0]
+    y0 = coord_prev[1]
+    lat1 = coord1[0] # x
+    lon1 = coord1[1] # y
+    lat2 = coord2[0]
+    lon2 = coord2[1]
+
+    geodesic = pyproj.Geod(ellps='WGS84')
+    bearing, inv_bearing, distance = geodesic.inv(lon1, lat1, lon2, lat2)
+
+    coord_next = [
+        x0 + distance * math.cos(bearing * math.pi / 180), 
+        y0 + distance * math.sin(bearing * math.pi / 180)
+    ]
+
+    return coord_next
+
+def normalize_lane_gps(lane_df, col=['x', 'y']) -> pd.DataFrame:
+
+    # normalize the GPS coordinates of the given lane_df to a planer axis
+    # with (0, 0) origin
+
+    lane_coord_next_lst = []
+    x = col[0]
+    y = col[1]
+
+    for index, row in lane_df.iterrows():
+    
+        coord1 = [row[y], row[x]]
+        
+        if index == 0:
+            coord2 = [lane_df.iloc[index+1][y], lane_df.iloc[index+1][x]]
+            coord_next = next_coord_conversion(coord1, coord2)
+        elif index == lane_df.shape[0]-1:
+            pass
+        else:
+            coord2 = [lane_df.iloc[index+1][y], lane_df.iloc[index+1][x]]
+            coord_prev = lane_coord_next_lst[-1]
+            coord_next = next_coord_conversion(coord1, coord2, coord_prev)
+        
+        lane_coord_next_lst.append(coord_next)
+        
+    lane_coord_next_lst = np.asarray(lane_coord_next_lst)
+    
+    # shift so that the minimum coordinates are at the origin
+    lane_coord_next_lst[:, 0] = lane_coord_next_lst[:, 0] - min(lane_coord_next_lst[:, 0])
+    lane_coord_next_lst[:, 1] = lane_coord_next_lst[:, 1] - min(lane_coord_next_lst[:, 1])
+
+    lane_df[y] = lane_coord_next_lst[:, 0]
+    lane_df[x] = lane_coord_next_lst[:, 1]
+
+    return lane_df
