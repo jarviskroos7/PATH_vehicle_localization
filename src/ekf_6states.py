@@ -6,8 +6,8 @@ from sympy import Symbol, symbols, Matrix, sin, cos
 from scipy.signal import savgol_filter
 from util import *
 
-sample_freq = 25 # 10hz
-dt = 0.01 * sample_freq
+sample_freq = 10 # [hz]
+dt = 1 / sample_freq
 
 v, theta, omega, dts, x, y, lat, lon, alpha = symbols('v theta \omega T x y lat lon alpha') # type: ignore
 

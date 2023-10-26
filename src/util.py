@@ -253,3 +253,29 @@ def normalize_lane_gps(lane_df, col=['x', 'y']) -> pd.DataFrame:
     lane_df[x] = lane_coord_next_lst[:, 1]
 
     return lane_df
+
+def sample_gps(traj_df, sampling_rate) -> pd.DataFrame:
+    """
+    down sample the given dataframe to the sampling_rate 
+    """
+
+    rtk_sampling_rate = 100 # [hz]
+    sampling_spacing = round(rtk_sampling_rate / sampling_rate)
+    traj_df_sampled = traj_df.iloc[::sampling_spacing]
+
+    return traj_df_sampled
+
+def gps_noise_augmentation(traj_df, noise_perc, colns, seed=0) -> pd.DataFrame:
+
+    np.random.seed(seed)
+    seeds = np.random.randint(10, size=len(colns))
+    traj_df_copy = traj_df.copy()
+    std = 0.5
+
+    for idx in np.arange(len(colns)):
+        coln = colns[idx]
+        np.random.seed(seeds[idx])
+        traj_df_copy[f'{coln}_noise'] = traj_df_copy[coln] + noise_perc * std * np.random.randn(traj_df_copy.shape[0])
+    
+    print('Random seeds =', seeds)
+    return traj_df_copy
