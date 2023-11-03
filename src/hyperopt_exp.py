@@ -3,7 +3,7 @@ from hyperopt import fmin, tpe, hp, anneal, Trials
 import numpy as np
 import sys
 from ekf_6states import *
-from util import *
+from src.utils import *
 import logging
 import warnings
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)

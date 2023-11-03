@@ -4,7 +4,7 @@ import pickle
 import gzip
 from sympy import Symbol, symbols, Matrix, sin, cos
 from scipy.signal import savgol_filter
-from util import *
+from src.utils import *
 
 sample_freq = 10 # [hz]
 dt = 1 / sample_freq

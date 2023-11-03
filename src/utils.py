@@ -279,3 +279,30 @@ def gps_noise_augmentation(traj_df, noise_perc, colns, seed=0) -> pd.DataFrame:
     
     print('Random seeds =', seeds)
     return traj_df_copy
+
+def seg_generation(track_df, seg_size_avg, seg_size_std, num_samples=500, seed=0, ver=1) -> list:
+    """
+    sample continuous trajectory segments from full track with length from a normal distribution
+
+    return: list of pd.Dataframe
+    """
+    
+    # ensure reproducibility
+    np.random.seed(seed)
+    seg = []
+
+    if ver == 1:
+        # random start, random length
+        for length in np.random.normal(seg_size_avg, sig_size_std, num_samples).round():
+            
+            start_idx = np.random.randint(track_df.shape[0]-length)
+            seg_gt.append(track_df.iloc[start_idx:start_idx+length])
+    elif ver == 2:
+        # fixed start, random length
+        start_idx = 0 # start at the begining of the track
+        for length in np.random.randint(track_df.shape[0]-seg_size_avg, size=num_samples):
+
+            seg_gt.append(track_df.iloc[start_idx:start_idx+length])
+        
+
+    return seg

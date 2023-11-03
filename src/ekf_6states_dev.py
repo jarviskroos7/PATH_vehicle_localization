@@ -4,7 +4,7 @@ import pickle
 import gzip
 from sympy import Symbol, symbols, Matrix, sin, cos
 from scipy.signal import savgol_filter
-from util import *
+from src.utils import *
 
 def load_data(data_ver='3'):
 
