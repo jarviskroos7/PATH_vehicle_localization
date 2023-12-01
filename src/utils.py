@@ -306,3 +306,12 @@ def seg_generation(track_df, seg_size_avg, seg_size_std, num_samples=500, seed=0
             seg.append(track_df.iloc[start_idx:start_idx+length])
         
     return seg
+
+def speed_noise_augmentation(traj_df, noise_perc, noise_std, seed=0) -> pd.DataFrame:
+
+    np.random.seed(seed)
+    traj_df_copy = traj_df.copy()
+    traj_df_copy[f'Vx_noise'] = traj_df_copy['Vx'] + noise_perc * noise_std * np.random.randn(traj_df_copy.shape[0])
+    traj_df_copy[f'Vx_noise'] = np.maximum(np.zeros_like(traj_df_copy[f'Vx_noise']), traj_df_copy[f'Vx_noise'].values)
+
+    return traj_df_copy
