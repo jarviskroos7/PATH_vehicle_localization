@@ -315,3 +315,26 @@ def speed_noise_augmentation(traj_df, noise_perc, noise_std, seed=0) -> pd.DataF
     traj_df_copy[f'Vx_noise'] = np.maximum(np.zeros_like(traj_df_copy[f'Vx_noise']), traj_df_copy[f'Vx_noise'].values)
 
     return traj_df_copy
+
+
+def speed_missing_delay_augmentation(traj_df, noise_perc, noise_std, seed=0) -> pd.DataFrame:
+
+    def random_delay(row, max_delay):
+        """
+        max_delay: [s], used to generate a random delay, which is a random fraction of the max_delay
+        TODO: can only do the multiples of the frequency, 10hz
+        """
+
+        delay = np.random.random() * max_delay
+        delayed_index = row.name - pd.Timedelta(days=delay)
+        if delayed_index in time_series.index:
+            return time_series.loc[delayed_index, 'Value']
+        else:
+            return np.nan
+    
+    np.random.seed(seed)
+    traj_df_copy = traj_df.copy()
+    traj_df_copy[f'Vx_noise'] = traj_df_copy['Vx'] + noise_perc * noise_std * np.random.randn(traj_df_copy.shape[0])
+    traj_df_copy[f'Vx_noise'] = np.maximum(np.zeros_like(traj_df_copy[f'Vx_noise']), traj_df_copy[f'Vx_noise'].values)
+
+    return traj_df_copy
